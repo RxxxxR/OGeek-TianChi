@@ -13,6 +13,14 @@ import pandas as pd
 import numpy as np
 import re
 
+def get_max_query_prediction_key(query_prediction_json):
+    if query_prediction_json!={}:
+        max_query = max(query_prediction_json, key=query_prediction_json.get)
+    else:
+        max_query = "" 
+    return max_query
+    
+
 def get_statistics_query_prediction(query_prediction_json, title):
     if query_prediction_json!={}:
         np_query_prediction_json = np.array(list(query_prediction_json.values()), dtype = np.float32)

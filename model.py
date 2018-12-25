@@ -8,6 +8,10 @@ Created on Thu Oct 18 11:23:40 2018
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import f1_score
 import pandas as pd
+from sklearn.model_selection import StratifiedKFold
+from sklearn import tree
+import numpy as np
+
 #import numpy as np
 #import csv
 
@@ -19,7 +23,7 @@ import pandas as pd
 
 #x_data_tag_all = pd.read_csv("./x_data.csv")
 #x_vali_tag_all = pd.read_csv("./x_vali.csv")
-
+#x_testB_tag_all = pd.read_csv("./x_test.csv")
 
 data_tag = [         
         #######新数据############ 68.4
@@ -35,46 +39,47 @@ data_tag = [
         "len_title",#文章标题的长度
         "prefix_title_rate",#前缀词出现在文章标题的长度比值
         "prefix_title_distance_rate",#前缀词与文章标题的编辑距离除以他们的总长度
+        "max_query_title_rate",#预测序列最大值出现在文章标题的长度比值
+        "max_query_title_distance_rate",#预测序列最大值与文章标题的编辑距离除以他们的总长度
     
         ##########svd############## 
-        'prefix_title_dot',
-        'prefix_title_consin',
-        'prefix_title_abs_mean',
-        'prefix_title_abs_sum',
-        'prefix_title_abs_std',
-        'prefix_title_abs_max',
-        'prefix_title_abs_min',
-        'prefix_title_mul_mean',
-        'prefix_title_mul_sum',
-        'prefix_title_mul_std',
-        'prefix_title_mul_max',
-        'prefix_title_mul_min',
-        'prefix_max_query_dot',
-        'prefix_max_query_consin',
-        'prefix_max_query_abs_mean',
-        'prefix_max_query_abs_sum',
-        'prefix_max_query_abs_std',
-        'prefix_max_query_abs_max',
-        'prefix_max_query_abs_min',
-        'prefix_max_query_mul_mean',
-        'prefix_max_query_mul_sum',
-        'prefix_max_query_mul_std',
-        'prefix_max_query_mul_max',
-        'prefix_max_query_mul_min',
-        'max_query_title_dot',
-        'max_query_title_consin',
-        'max_query_title_abs_mean',
-        'max_query_title_abs_sum',
-        'max_query_title_abs_std',
-        'max_query_title_abs_max',
-        'max_query_title_abs_min',
-        'max_query_title_mul_mean',
-        'max_query_title_mul_sum',
-        'max_query_title_mul_std',
-        'max_query_title_mul_max',
-        'max_query_title_mul_min', 
-        "max_query_title_rate",
-        "max_query_title_distance_rate",
+#        'prefix_title_dot',
+#        'prefix_title_consin',
+#        'prefix_title_abs_mean',
+#        'prefix_title_abs_sum',
+#        'prefix_title_abs_std',
+#        'prefix_title_abs_max',
+#        'prefix_title_abs_min',
+#        'prefix_title_mul_mean',
+#        'prefix_title_mul_sum',
+#        'prefix_title_mul_std',
+#        'prefix_title_mul_max',
+#        'prefix_title_mul_min',
+#        'prefix_max_query_dot',
+#        'prefix_max_query_consin',
+#        'prefix_max_query_abs_mean',
+#        'prefix_max_query_abs_sum',
+#        'prefix_max_query_abs_std',
+#        'prefix_max_query_abs_max',
+#        'prefix_max_query_abs_min',
+#        'prefix_max_query_mul_mean',
+#        'prefix_max_query_mul_sum',
+#        'prefix_max_query_mul_std',
+#        'prefix_max_query_mul_max',
+#        'prefix_max_query_mul_min',
+#        'max_query_title_dot',
+#        'max_query_title_consin',
+#        'max_query_title_abs_mean',
+#        'max_query_title_abs_sum',
+#        'max_query_title_abs_std',
+#        'max_query_title_abs_max',
+#        'max_query_title_abs_min',
+#        'max_query_title_mul_mean',
+#        'max_query_title_mul_sum',
+#        'max_query_title_mul_std',
+#        'max_query_title_mul_max',
+#        'max_query_title_mul_min', 
+
         
         ########历史数据统计#########
         "new_max_query_ctr",#预测序列最大值被点击的概率
@@ -105,8 +110,58 @@ def get_clean_data(x_data):
     return x_data
 
 
+#决策树
+def DecisionTreeModel(x_data_tag_all, x_vali_tag_all):
+    x_data_tag_all = get_clean_data(x_data_tag_all)
+    x_data = x_data_tag_all[data_tag].fillna(-1)
+    y_data = x_data_tag_all["label"]
+    
+    ###################################
+    x_vali_tag_all = get_clean_data(x_vali_tag_all)
+    x_vali = x_vali_tag_all[data_tag].fillna(-1)
+    y_vali = x_vali_tag_all["label"]
+    
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(x_data, y_data)
+    y_pred = clf.predict(x_vali)
 
-def RandomForestModel(x_data_tag_all, x_vali_tag_all, x_testB_tag_all):
+    print("f1_score0:", f1_score(y_vali, y_pred))
+
+#随机森林
+def RandomForestModel(x_data_tag_all, x_vali_tag_all):
+    x_data_tag_all = get_clean_data(x_data_tag_all)
+    x_data = x_data_tag_all[data_tag].fillna(-1)
+    y_data = x_data_tag_all["label"]
+    
+    ###################################
+    x_vali_tag_all = get_clean_data(x_vali_tag_all)
+    x_vali = x_vali_tag_all[data_tag].fillna(-1)
+    y_vali = x_vali_tag_all["label"]
+
+    #（特征选择）树的数量设置为默认值，最终模型树的数量用100
+    #seed = 100
+    #X_train,X_test, y_train, y_test = train_test_split(x_data, y_data,test_size = 0.2,random_state = seed)
+    RandomForest = RandomForestClassifier(random_state = 100, 
+                                          min_samples_split = 3, 
+                                          n_estimators = 100,
+                                          oob_score = True,
+                                          verbose = 2,
+                                          class_weight = "balanced",
+                                          n_jobs = 10)#进程数         
+    
+    print("验证集：")
+    RandomForest.fit(x_data, y_data)
+    imp = RandomForest.feature_importances_
+    print(imp)
+    print(np.min(imp))
+    print(data_tag[np.where(imp==np.min(imp))[0][0]])
+    print("oob_score:",RandomForest.oob_score_)
+    y_pred = RandomForest.predict(x_vali)
+    print("f1_score0:",f1_score(y_vali, y_pred))
+
+    
+#5折随机森林
+def n_fold_RandomForestModel(x_data_tag_all, x_vali_tag_all, x_testB_tag_all):
     x_data_tag_all = get_clean_data(x_data_tag_all)
     x_data = x_data_tag_all[data_tag].fillna(-1)
     y_data = x_data_tag_all["label"]
@@ -122,10 +177,8 @@ def RandomForestModel(x_data_tag_all, x_vali_tag_all, x_testB_tag_all):
     
     x_test = pd.concat([x_vali, x_test], axis = 0)
     
-    
-    from sklearn.model_selection import StratifiedKFold
 
-    n_folds = 5
+    n_folds = 10
     seed = 100
     
     kfolder = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
@@ -133,10 +186,10 @@ def RandomForestModel(x_data_tag_all, x_vali_tag_all, x_testB_tag_all):
     
     RandomForest = RandomForestClassifier(random_state = seed, 
                                           min_samples_split = 3, 
-                                          n_estimators = 100,
-                                          verbose = 1,
+                                          n_estimators = 10,
+                                          verbose = 2,
                                           class_weight = "balanced",
-                                          n_jobs = 100)#进程数       
+                                          n_jobs = 10)#进程数       
     
     preds_list = []
     #(8)72.948

@@ -185,8 +185,10 @@ if __name__=="__main__":
     train_data = pd.read_table(train, sep = "\t", encoding = "utf-8", quoting =csv.QUOTE_NONE, header=None, names=["prefix", "query_prediction", "title", "tag", "label"], error_bad_lines=False)
     print("预测序列统计值")
     x_data_tag_all = get_query_prediction_statistics(train_data.fillna('{}'))
+    del train_data
     train_statistics = get_statistics(x_data_tag_all)
     x_data_tag_all = pd.concat([x_data_tag_all, train_statistics], axis = 1)
+    del train_statistics
     max_query_ctr = x_data_tag_all.groupby(["max_query"], as_index=False)["label"].agg({"max_query_ctr":"mean"})
     max_query_count = x_data_tag_all.groupby(["max_query"], as_index=False)["label"].agg({"max_query_count":"count"})
     len_max_query_ctr = x_data_tag_all.groupby(["len_max_query"], as_index=False)["label"].agg({"len_max_query_ctr":"mean"})
@@ -195,6 +197,7 @@ if __name__=="__main__":
     len_query_prediction_max_query_count = x_data_tag_all.groupby(['len_query_prediction', "max_query"], as_index=False)["label"].agg({"len_query_prediction_max_query_count":"count"})
     train_max_query_statistics = get_max_query_statistics(x_data_tag_all, max_query_ctr, max_query_count, len_max_query_ctr, len_max_query_count, len_query_prediction_max_query_ctr, len_query_prediction_max_query_count)
     x_data_tag_all = pd.concat([x_data_tag_all, train_max_query_statistics], axis = 1)
+    del train_max_query_statistics
     print("前缀词统计值")
     prefix_ctr = x_data_tag_all.groupby(["prefix"], as_index=False)["label"].agg({"prefix_ctr":"mean"})
     prefix_count = x_data_tag_all.groupby(["prefix"], as_index=False)["label"].agg({"prefix_count":"count"})
@@ -204,6 +207,7 @@ if __name__=="__main__":
     len_query_prediction_prefix_count = x_data_tag_all.groupby(['len_query_prediction', "prefix"], as_index=False)["label"].agg({"len_query_prediction_prefix_count":"count"})
     train_prefix_statistics = get_prefix_statistics(x_data_tag_all, prefix_ctr, prefix_count, len_prefix_ctr, len_prefix_count, len_query_prediction_prefix_ctr, len_query_prediction_prefix_count)
     x_data_tag_all = pd.concat([x_data_tag_all, train_prefix_statistics], axis = 1)
+    del train_prefix_statistics
     print("文章标题统计值")
     title_ctr = x_data_tag_all.groupby(["title"], as_index=False)["label"].agg({"title_ctr":"mean"})
     title_count = x_data_tag_all.groupby(["title"], as_index=False)["label"].agg({"title_count":"count"})
@@ -211,6 +215,7 @@ if __name__=="__main__":
     len_title_count = x_data_tag_all.groupby(["len_title"], as_index=False)["label"].agg({"len_title_count":"count"})
     train_title_statistics = get_title_statistics(x_data_tag_all, title_ctr, title_count, len_title_ctr, len_title_count)
     x_data_tag_all = pd.concat([x_data_tag_all, train_title_statistics], axis = 1) 
+    del train_title_statistics
     print("文章标签统计值")
     tag_ctr = x_data_tag_all.groupby(["tag"], as_index=False)["label"].agg({"tag_ctr":"mean"})
     tag_count = x_data_tag_all.groupby(["tag"], as_index=False)["label"].agg({"tag_count":"count"})
@@ -227,7 +232,8 @@ if __name__=="__main__":
     tag_len_prefix_len_title_count = x_data_tag_all.groupby(["tag","len_prefix", "len_title"], as_index=False)["label"].agg({"tag_len_prefix_len_title_count":"count"})
     tag_len_query_prediction_ctr = x_data_tag_all.groupby(['len_query_prediction', "tag"], as_index=False)["label"].agg({"tag_len_query_prediction_ctr":"mean"})
     train_tag_statistics = get_tag_statistics(x_data_tag_all, tag_ctr, tag_title_ctr, tag_title_count, tag_len_title_ctr, tag_len_title_count, tag_prefix_ctr, tag_len_prefix_ctr, tag_len_prefix_count, title_tag_prefix_ctr, title_tag_prefix_count, tag_len_prefix_len_title_ctr, tag_len_prefix_len_title_count, tag_len_query_prediction_ctr)
-    x_data_tag_all = pd.concat([x_data_tag_all, train_tag_statistics], axis = 1)   
+    x_data_tag_all = pd.concat([x_data_tag_all, train_tag_statistics], axis = 1)  
+    del train_tag_statistics
     print("附加文章标签统计值")
     tag_max_query_ctr = x_data_tag_all.groupby(["tag", "max_query"], as_index=False)["label"].agg({"tag_max_query_ctr":"mean"})
     tag_max_query_count = x_data_tag_all.groupby(["tag", "max_query"], as_index=False)["label"].agg({"tag_max_query_count":"count"})
@@ -239,12 +245,15 @@ if __name__=="__main__":
     tag_len_max_query_len_title_count = x_data_tag_all.groupby(["tag","len_max_query", "len_title"], as_index=False)["label"].agg({"tag_len_max_query_len_title_count":"count"})
     train_max_query_tag_statistics = get_max_query_tag_statistics(x_data_tag_all, tag_max_query_ctr, tag_max_query_count, tag_len_max_query_ctr, tag_len_max_query_count, title_tag_max_query_ctr, title_tag_max_query_count, tag_len_max_query_len_title_ctr, tag_len_max_query_len_title_count)
     x_data_tag_all = pd.concat([x_data_tag_all, train_max_query_tag_statistics], axis = 1)
+    del train_max_query_tag_statistics
     train_list_sentences = get_list_sentences(x_data_tag_all)
     x_data_tag_all = pd.concat([x_data_tag_all, train_list_sentences], axis = 1)
-    
-    
+    del train_list_sentences
     #print("存储训练集")
+    del x_data_tag_all["query_prediction_json"]
+    del x_data_tag_all["statistics_query_prediction"]
     #x_data_tag_all.to_csv("./x_data.csv", index = False)
+    
     print("验证集")
     #vali_data = pd.read_table("./oppo_round1_vali_20180929/oppo_round1_vali_20180929.txt", sep = "\t", encoding = "utf-8", quoting =csv.QUOTE_NONE, header=None, names=["prefix", "query_prediction", "title", "tag", "label"], error_bad_lines=False)
     vali_data = pd.read_table(vali, sep = "\t", encoding = "utf-8", quoting =csv.QUOTE_NONE, header=None, names=["prefix", "query_prediction", "title", "tag", "label"], error_bad_lines=False)
@@ -285,6 +294,7 @@ if __name__=="__main__":
     x_testB_tag_all = pd.concat([x_testB_tag_all, test_max_query_tag_statistics], axis = 1)
     test_list_sentences = get_list_sentences(x_testB_tag_all)
     x_testB_tag_all = pd.concat([x_testB_tag_all, test_list_sentences], axis = 1)   
+    #x_testB_tag_all.to_csv("./x_test.csv", index = False)
     
     #svd
     train_prefix_vec, train_title_vec, train_max_query_vec, vali_prefix_vec, vali_title_vec, vali_max_query_vec, test_prefix_vec, test_title_vec, test_max_query_vec = get_feature.svd_model(x_data_tag_all, x_vali_tag_all, x_testB_tag_all)
